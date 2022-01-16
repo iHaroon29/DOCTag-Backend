@@ -4,7 +4,7 @@ const app = express()
 const helmet = require('helmet')
 const cors = require('cors')
 const dbo = require('./dataBaseFile')
-const portNumber = process.env.portnumber || process.argv[2] || 8000
+const portNumber = process.env.portnumber || process.argv[2] || process.env.PORT
 
 app.use(helmet())
 app.use(cors())
