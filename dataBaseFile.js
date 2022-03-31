@@ -6,26 +6,22 @@ const client = new MongoClient(connectionString, {
   useUnifiedTopology: true,
 })
 
-const dataSubmittion = (data, command, res) => {
-  client.connect((err, db) => {
-    if (err) console.log(err)
+const dataSubmittion = async (data, command, res) => {
+  try {
+    let databaseConnection = await client.connect()
     if (command === 'upload') {
-      db.db('userData')
-        .collection(data.UID)
-        .insertOne(data, (err, result) => {
-          if (err) console.log(err)
-          console.log('uploaded')
-        })
+      await databaseConnection.db('userData').collection(data.UID).insertOne()
     } else {
-      db.db('userData')
+      let dataFetched = await databaseConnection
+        .db('userData')
         .collection(data.data)
         .find({})
-        .toArray((err, result) => {
-          if (err) console.log(err)
-          res.status(200).send(result)
-        })
+        .toArray()
+      res.status(200).send(dataFetched)
     }
-  })
+  } catch (e) {
+    console.log(e.message)
+  }
 }
 
 module.exports = dataSubmittion
