@@ -7,7 +7,8 @@ const {
 const Router = Express.Router()
 
 Router.route('/createUser').post(createUser)
-Router.route('/updateUser/:validPhoneNumber').post(updateUser)
-Router.route('/viewUser/:validPhoneNumber').get(fetchUser)
+Router.route('/updateUser/:validEmail').post(updateUser)
+// Router.route("/viewAllUsers").get(fetch)
+Router.route('/viewUser/:validEmail').get(fetchUser)
 
 module.exports = Router
