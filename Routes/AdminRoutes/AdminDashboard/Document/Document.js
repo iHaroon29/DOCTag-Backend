@@ -9,7 +9,7 @@ const Router = Express.Router()
 
 Router.route('/createDocument').post(createDocument)
 Router.route('/updateDocument/:applicantCredHash').post(updateDocument)
-// Router.route('/viewAllDocuments').get(fetchDocuments)
+Router.route('/viewAllDocuments').get(fetchDocuments)
 Router.route('/viewDocument/:applicantCredHash').get(fetchDocument)
 
 module.exports = Router

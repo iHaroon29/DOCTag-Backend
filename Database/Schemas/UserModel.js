@@ -21,7 +21,7 @@ const UserSchema = new Schema({
   },
   typeOfUser: {
     type: String,
-    required: true,
+    default: 'User',
   },
   createdOn: {
     type: String,

@@ -1,6 +1,6 @@
 require('dotenv').config()
 
-const connection = require('../../Database/Models/CarDocumentModel')
+const { UserModel } = require('../../Database/Models/DocTagModel')
 const bcrypt = require('bcrypt')
 const JWT = require('jsonwebtoken')
 const AuthError = require('../../Errors/ErrorTypes/AuthenticationError')
@@ -31,7 +31,7 @@ const Authentication = async (req, res, next) => {
 const Authorization = async (req, res) => {
   const { email, password } = req.body
   try {
-    let record = await connection.models['Users'].findOne({
+    let record = await UserModel.findOne({
       email: email,
     })
     if (record === null) {

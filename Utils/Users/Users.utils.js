@@ -1,13 +1,15 @@
+require('dotenv').config()
+const JWT = require('jsonwebtoken')
 const crypto = require('crypto')
 const bcrypt = require('bcrypt')
-const connection = require('../../Database/Models/CarDocumentModel')
+const { UserModel } = require('../../Database/Models/DocTagModel')
 const DataBaseError = require('../../Errors/ErrorTypes/DataBaseError')
 
 // Create Task Flow
 
 const createUser = async (req, res) => {
   try {
-    let newUser = await new connection.models['Users']({
+    let newUser = await new UserModel({
       userID: crypto.randomBytes(20).toString('hex'),
       userName: req.body.userName,
       email: req.body.email,
@@ -16,12 +18,19 @@ const createUser = async (req, res) => {
       createdOn: new Date().toLocaleString(),
       updatedOn: new Date().toLocaleString(),
     })
+    let token = await JWT.sign({ id: newUser.userID }, process.env.secret, {
+      expiresIn: 86400,
+    })
     await newUser.save()
-    res.status(200).send({ status: 200, message: 'User created!' })
+    res
+      .status(200)
+      .send({ status: 200, message: 'User created!', auth: true, token })
   } catch (error) {
+    // console.log(error)
     let ErrorResponse = DataBaseError(error)
     console.log(ErrorResponse.errMessage)
     res.status(ErrorResponse.errStatusCode).send({
+      auth: false,
       status: ErrorResponse.errStatusCode,
       message: ErrorResponse.errMessage,
     })
@@ -32,12 +41,13 @@ const createUser = async (req, res) => {
 
 const fetchUser = async (req, res, next) => {
   try {
-    let User = await new connection.models['Users'].findOne(
+    let User = await UserModel.findOne(
       {
-        email: req.params.email,
+        email: req.params.validEmail,
       },
       { password: 0, userID: 0 }
     )
+    console.log(User)
     if (User === null) {
       throw new Error('No such Entry found')
     }

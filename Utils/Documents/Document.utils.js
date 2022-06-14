@@ -1,5 +1,5 @@
 require('dotenv').config()
-const connection = require('../../Database/Models/CarDocumentModel')
+const { ReviewDataSchema } = require('../../Database/Models/DocTagModel')
 const DataBaseError = require('../../Errors/ErrorTypes/DataBaseError')
 const {
   qrCodeSequenceGeneration,
@@ -10,7 +10,7 @@ const {
 
 const createDocument = async (req, res) => {
   try {
-    let newUserReview = await new connection.models['User Credential']({
+    let newUserReview = await new ReviewDataSchema({
       applicantID: await qrCodeSequenceGeneration(
         req.body.applicantName,
         req.body.applicantEmail,
@@ -23,12 +23,14 @@ const createDocument = async (req, res) => {
     })
     let qrCodeBaseURL = await qrCodeImageGenerator(newUserReview.applicantID)
     await newUserReview.save()
-    res.status(200).send({
+    await res.status(200).send({
       status: 200,
       qrCode: qrCodeBaseURL,
+      applicantID,
       message: 'Documents have been Submitted for verification.',
     })
   } catch (error) {
+    // console.log(error)
     let ErrorResponse = DataBaseError(error)
     console.log(ErrorResponse.errMessage)
     res.status(ErrorResponse.errStatusCode).send({
@@ -42,10 +44,10 @@ const createDocument = async (req, res) => {
 
 const fetchDocument = async (req, res, next) => {
   try {
-    let applicant = await connection.models['User Credential'].findOne({
+    let document = await ReviewDataSchema.findOne({
       applicantID: req.params.applicantCredHash,
     })
-    if (applicant === null) {
+    if (document === null) {
       throw DataBaseError({
         name: 'applicantNull',
         value: req.params.applicantCredHash,
@@ -63,7 +65,7 @@ const fetchDocument = async (req, res, next) => {
 
 const fetchDocuments = async (req, res, next) => {
   try {
-    let taskFlows = await TaskProcessModel.find({})
+    let taskFlows = await ReviewDataSchema.find({})
     if (taskFlows === null) {
       throw new Error("Can't fetch Flow's contact Devs")
     }
@@ -80,11 +82,11 @@ const fetchDocuments = async (req, res, next) => {
 
 const updateDocument = async (req, res, next) => {
   try {
-    TaskProcessModel.findOneAndUpdate(
+    await ReviewDataSchema.findOneAndUpdate(
       {
-        applicationTaskFlowUseCase: req.params.applicationTaskFlowUseCase,
+        applicantID: req.params.applicantCredHash,
       },
-      { taskList: req.body.taskList },
+      { applicantDocuments: req.body.applicantDocuments },
       (err, doc) => {
         if (err) throw new Error(err)
         res.status(200).send({ status: 200, message: 'Task Updated' })
