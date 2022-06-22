@@ -1,5 +1,5 @@
 require('dotenv').config()
-const { ReviewDataSchema } = require('../../Database/Models/DocTagModel')
+const { dependencyInjector } = require('../../Database/Models/DocTagModel')
 const DataBaseError = require('../../Errors/ErrorTypes/DataBaseError')
 const {
   qrCodeSequenceGeneration,
@@ -9,25 +9,45 @@ const {
 // Create Task Flow
 
 const createDocument = async (req, res) => {
+  const vehicleDetails = await dependencyInjector(res.locals.collectionName)
+  const {
+    vehicleNumber,
+    vehicleOwnerName,
+    vehicleOwnerEmail,
+    vehicleOwnerPhoneNumber,
+    vehicleDocuments,
+  } = req.body
   try {
-    let newUserReview = await new ReviewDataSchema({
-      applicantID: await qrCodeSequenceGeneration(
-        req.body.applicantName,
-        req.body.applicantEmail,
-        req.body.applicantPhoneNumber
-      ),
-      applicantName: req.body.applicantName,
-      applicantEmail: req.body.applicantEmail,
-      applicantPhoneNumber: req.body.applicantPhoneNumber,
-      applicantDocuments: req.body.applicantDocuments,
-    })
-    let qrCodeBaseURL = await qrCodeImageGenerator(newUserReview.applicantID)
-    await newUserReview.save()
+    const qrCodeSequence = await await qrCodeSequenceGeneration(
+      vehicleNumber,
+      vehicleOwnerName,
+      vehicleOwnerEmail,
+      vehicleOwnerPhoneNumber
+    )
+    let record = await vehicleDetails.findOneAndUpdate(
+      {
+        vehicleNumber: vehicleNumber,
+      },
+      {
+        vehicleID: qrCodeSequence,
+        vehicleNumber: vehicleNumber,
+        vehicleOwnerName: vehicleOwnerName,
+        vehicleOwnerEmail: vehicleOwnerEmail,
+        vehicleOwnerPhoneNumber: vehicleOwnerPhoneNumber,
+        vehicleQRCode: await qrCodeImageGenerator(
+          qrCodeSequence,
+          res.locals.collectionName
+        ),
+        $push: { vehicleDocuments: vehicleDocuments },
+      },
+      {
+        new: true,
+        upsert: true,
+      }
+    )
     await res.status(200).send({
       status: 200,
-      qrCode: qrCodeBaseURL,
-      applicantID,
-      message: 'Documents have been Submitted for verification.',
+      message: `Thank you for Submitting your documents for ${vehicleNumber}`,
     })
   } catch (error) {
     // console.log(error)
@@ -40,19 +60,41 @@ const createDocument = async (req, res) => {
   }
 }
 
+const fetchAllVehicles = async (req, res, next) => {
+  try {
+    let UserCollection = await dependencyInjector(res.locals.collectionName)
+    const allVehicles = await UserCollection.find({})
+    await res.status(200).send({
+      status: 200,
+      allVehicles,
+    })
+  } catch (e) {
+    console.log(e)
+    res.status(400).send({
+      status: 400,
+      message: e.message,
+    })
+  }
+}
+
 // Fetch Task Flow
 
 const fetchDocument = async (req, res, next) => {
   try {
-    let document = await ReviewDataSchema.findOne({
-      applicantID: req.params.applicantCredHash,
+    let UserCollection = await dependencyInjector(res.locals.collectionName)
+    let vehicle = await UserCollection.findOne({
+      vehicleID: req.params.vehicleID,
     })
-    if (document === null) {
+    if (vehicle === null) {
       throw DataBaseError({
         name: 'applicantNull',
-        value: req.params.applicantCredHash,
+        value: req.params.vehicleID,
       })
     }
+    let document
+    vehicle.vehicleDocuments.forEach((node) => {
+      node.documentName === req.params.documentName ? (document = node) : null
+    })
     res.status(200).send({ status: 200, document })
   } catch (err) {
     console.log(err.message)
@@ -65,11 +107,11 @@ const fetchDocument = async (req, res, next) => {
 
 const fetchDocuments = async (req, res, next) => {
   try {
-    let taskFlows = await ReviewDataSchema.find({})
-    if (taskFlows === null) {
-      throw new Error("Can't fetch Flow's contact Devs")
-    }
-    res.status(200).send({ status: 200, taskFlows })
+    let UserCollection = await dependencyInjector(res.locals.collectionName)
+    let vehicle = await UserCollection.findOne({
+      vehicleID: req.params.vehicleID,
+    })
+    res.status(200).send({ status: 200, vehicle })
   } catch (err) {
     console.log(err.message)
     res.status(400).send({
@@ -82,16 +124,16 @@ const fetchDocuments = async (req, res, next) => {
 
 const updateDocument = async (req, res, next) => {
   try {
-    await ReviewDataSchema.findOneAndUpdate(
+    let UserCollection = await dependencyInjector(res.locals.collectionName)
+    await UserCollection.findOneAndUpdate(
       {
-        applicantID: req.params.applicantCredHash,
+        vehicleID: req.params.vehicleID,
       },
-      { applicantDocuments: req.body.applicantDocuments },
-      (err, doc) => {
-        if (err) throw new Error(err)
-        res.status(200).send({ status: 200, message: 'Task Updated' })
-      }
+      { $push: { vehicleDocuments: req.body.vehicleDocuments } }
     )
+    await res
+      .status(200)
+      .send({ status: 200, message: 'Vehicle Documents Updated' })
   } catch (err) {
     console.log(error.message)
     res.status(400).send({
@@ -101,9 +143,28 @@ const updateDocument = async (req, res, next) => {
   }
 }
 
+const deleteVehicle = async (req, res, next) => {
+  try {
+    const vehicleDetails = await dependencyInjector(res.locals.collectionName)
+    let response = await vehicleDetails.findOneAndDelete(req.params.vehicleID)
+    // const allVehicles = await vehicleDetails.find({})
+    await res.status(200).send({
+      status: 200,
+      message: `${response.vehicleNumber} has been deleted.`,
+    })
+  } catch (e) {
+    await res.status(400).send({
+      status: 200,
+      message: e.message,
+    })
+  }
+}
+
 module.exports = {
   createDocument,
   fetchDocument,
   fetchDocuments,
   updateDocument,
+  fetchAllVehicles,
+  deleteVehicle,
 }

@@ -2,7 +2,10 @@ require('dotenv').config()
 const JWT = require('jsonwebtoken')
 const crypto = require('crypto')
 const bcrypt = require('bcrypt')
-const { UserModel } = require('../../Database/Models/DocTagModel')
+const {
+  UserModel,
+  EnrolledUsers,
+} = require('../../Database/AuthenticationDBConnection')
 const DataBaseError = require('../../Errors/ErrorTypes/DataBaseError')
 
 // Create Task Flow
@@ -18,13 +21,25 @@ const createUser = async (req, res) => {
       createdOn: new Date().toLocaleString(),
       updatedOn: new Date().toLocaleString(),
     })
+    let newEnrolledUser = await new EnrolledUsers({
+      userID: newUser.userID,
+      userName: req.body.userName,
+      collectionName: req.body.userName,
+    })
     let token = await JWT.sign({ id: newUser.userID }, process.env.secret, {
       expiresIn: 86400,
     })
     await newUser.save()
+    await newEnrolledUser.save()
     res
       .status(200)
-      .send({ status: 200, message: 'User created!', auth: true, token })
+      .send({
+        status: 200,
+        message: 'User created!',
+        auth: true,
+        token,
+        userName: newEnrolledUser.userName,
+      })
   } catch (error) {
     // console.log(error)
     let ErrorResponse = DataBaseError(error)

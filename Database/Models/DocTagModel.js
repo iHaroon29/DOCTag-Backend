@@ -1,20 +1,15 @@
 const connection = require('../DatabaseConnection')
 
-const ReviewDataSchema = connection.model(
-  'Review',
-  require('../Schemas/UserCredentialSchema')
-)
-
-const FinalDataSchema = connection.model(
-  'Final',
-  require('../Schemas/UserCredentialSchema')
-)
-
-const UserModel = connection.model('User', require('../Schemas/UserModel'))
+const dependencyInjector = async (collectionName) => {
+  console.log(collectionName)
+  const UserCollection = connection.model(
+    collectionName + '_vehicles',
+    require('../Schemas/UserCollection')
+  )
+  return UserCollection
+}
 
 module.exports = {
   connection,
-  FinalDataSchema,
-  ReviewDataSchema,
-  UserModel,
+  dependencyInjector,
 }

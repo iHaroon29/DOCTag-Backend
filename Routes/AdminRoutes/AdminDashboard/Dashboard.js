@@ -1,14 +1,14 @@
 const Express = require('express')
 const Router = Express.Router()
-
+const User = require('./User/User')
 // const {
 //   hasLoggedOut,
 // } = require('../../../Services/AuthenticationServices/Authentication')
 
-// const Document = require('./Document/Document')
+const Document = require('./Document/Document')
 
-Router.use('/User', require('./User/User'))
-Router.use('/Document', require('./Document/Document'))
+Router.use('/User', User)
+Router.use('/Document', Document)
 Router.use(
   '/Logout',
   require('../../../Services/AuthenticationServices/Authentication')

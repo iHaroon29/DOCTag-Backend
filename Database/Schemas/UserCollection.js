@@ -3,26 +3,30 @@ const { Schema } = mongoose
 const validator = require('validator')
 
 const UserCredentialSchema = new Schema({
-  applicantID: {
+  vehicleID: {
     type: String,
-    unique: true,
   },
-  applicantName: {
+  vehicleNumber: {
     type: String,
-    required: true,
   },
-  applicantEmail: {
+  vehicleOwnerName: {
+    type: String,
+  },
+  vehicleOwnerEmail: {
     type: String,
     required: true,
     validate: (value) => {
       return validator.isEmail(value)
     },
   },
-  applicantPhoneNumber: {
+  vehicleOwnerPhoneNumber: {
     type: String,
     required: true,
   },
-  applicantDocuments: [
+  vehicleQRCode: {
+    type: String,
+  },
+  vehicleDocuments: [
     {
       documentName: {
         type: String,

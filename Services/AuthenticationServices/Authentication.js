@@ -1,6 +1,10 @@
 require('dotenv').config()
 
-const { UserModel } = require('../../Database/Models/DocTagModel')
+const {
+  UserModel,
+  EnrolledUsers,
+} = require('../../Database/AuthenticationDBConnection')
+
 const bcrypt = require('bcrypt')
 const JWT = require('jsonwebtoken')
 const AuthError = require('../../Errors/ErrorTypes/AuthenticationError')
@@ -47,6 +51,7 @@ const Authorization = async (req, res) => {
           auth: true,
           token,
           typeOfUser: record.typeOfUser,
+          userName: record.userName,
         })
       } else {
         throw AuthError('InvalidCredentials')
@@ -58,6 +63,28 @@ const Authorization = async (req, res) => {
       status: Error.errStatusCode,
       auth: false,
       message: Error.errMessage,
+    })
+  }
+}
+
+const CollectionValidation = async (req, res, next) => {
+  const { userName } = req.params
+  try {
+    const enrolledUser = await EnrolledUsers.findOne({
+      userName: userName,
+    })
+    if (enrolledUser == null) {
+      throw new Error(
+        `${userName} doesn't exists. Please contact devs or Sign up.`
+      )
+    }
+    res.locals.collectionName = enrolledUser.collectionName
+    next()
+  } catch (e) {
+    console.log(e.message)
+    res.status(400).send({
+      status: 400,
+      message: e.message,
     })
   }
 }
@@ -74,4 +101,5 @@ module.exports = {
   isAuthenticated: Authentication,
   isAuthorized: Authorization,
   hasLoggedOut: Logout,
+  CollectionValidation,
 }

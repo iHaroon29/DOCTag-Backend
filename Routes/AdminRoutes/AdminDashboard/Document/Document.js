@@ -7,9 +7,13 @@ const {
 } = require('../../../../Utils/Documents/Document.utils')
 const Router = Express.Router()
 
-Router.route('/createDocument').post(createDocument)
-Router.route('/updateDocument/:applicantCredHash').post(updateDocument)
-Router.route('/viewAllDocuments').get(fetchDocuments)
-Router.route('/viewDocument/:applicantCredHash').get(fetchDocument)
+Router.route('/:vehicleID/:typeOfDocument/createDocument').post(createDocument)
+Router.route(
+  '/:vehicleID/:typeOfDocument/updateDocument/:applicantCredHash'
+).post(updateDocument)
+// Router.route('/:vehicleID/:typeOfDocument/viewAllDocuments').get(fetchDocuments)
+Router.route('/:vehicleID/:typeOfDocument/viewDocument/:applicantCredHash').get(
+  fetchDocument
+)
 
 module.exports = Router
