@@ -17,7 +17,7 @@ const createUser = async (req, res) => {
       userName: req.body.userName,
       email: req.body.email,
       password: await bcrypt.hash(req.body.password, 10),
-      typeOfUser: req.body.typeOfUser,
+      typeOfUser: 'Admin',
       createdOn: new Date().toLocaleString(),
       updatedOn: new Date().toLocaleString(),
     })
@@ -31,15 +31,13 @@ const createUser = async (req, res) => {
     })
     await newUser.save()
     await newEnrolledUser.save()
-    res
-      .status(200)
-      .send({
-        status: 200,
-        message: 'User created!',
-        auth: true,
-        token,
-        userName: newEnrolledUser.userName,
-      })
+    res.status(200).send({
+      status: 200,
+      message: 'User created!',
+      auth: true,
+      token,
+      userName: newEnrolledUser.userName,
+    })
   } catch (error) {
     // console.log(error)
     let ErrorResponse = DataBaseError(error)

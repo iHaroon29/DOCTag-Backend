@@ -5,7 +5,7 @@ const {
   qrCodeSequenceGeneration,
   qrCodeImageGenerator,
 } = require('../QRCode/qrCode.utils')
-
+const crypto = require('crypto')
 // Create Task Flow
 
 const createDocument = async (req, res) => {
@@ -18,12 +18,7 @@ const createDocument = async (req, res) => {
     vehicleDocuments,
   } = req.body
   try {
-    const qrCodeSequence = await await qrCodeSequenceGeneration(
-      vehicleNumber,
-      vehicleOwnerName,
-      vehicleOwnerEmail,
-      vehicleOwnerPhoneNumber
-    )
+    const qrCodeSequence = await crypto.randomBytes(20).toString('hex')
     let record = await vehicleDetails.findOneAndUpdate(
       {
         vehicleNumber: vehicleNumber,

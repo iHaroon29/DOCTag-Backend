@@ -14,10 +14,6 @@ Router.use(cors())
 Router.use(helmet())
 Router.use(Express.json())
 
-const test = () => {
-  console.log('hello')
-}
-
 Router.use('/Auth', AuthorizationRoutes)
 Router.use('/Admin', AdminRoutes)
 Router.use('/User', UserRoutes)
